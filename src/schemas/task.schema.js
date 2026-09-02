@@ -9,3 +9,5 @@ export const createTaskSchema = z.object({
     .default("PENDING"),
   projectId: z.number(),
 });
+
+export const updateTaskSchema = createTaskSchema.partial();
