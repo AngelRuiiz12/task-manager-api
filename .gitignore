@@ -4,3 +4,4 @@ node_modules/
 dist/
 /src/generated/prisma
 /prisma/dev.db
+/prisma/test.db
