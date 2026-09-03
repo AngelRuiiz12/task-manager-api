@@ -42,7 +42,7 @@ describe("GET /tasks", () => {
 });
 
 describe("POST /tasks", () => {
-  test("debe responder un error 400", async () => {
+  test("devolver un error 400 al enviar datos inválidos", async () => {
     const response = await request(app).post("/tasks").send({ projectId: 1 });
 
     expect(response.status).toBe(400);
