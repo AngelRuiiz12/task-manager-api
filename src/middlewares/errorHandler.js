@@ -9,6 +9,10 @@ export function errorHandler(err, req, res, next) {
         return res.status(404).json({ message: "Resource not found" });
       case "P2002":
         return res.status(409).json({ message: "Resource already exists" });
+      case "P2003":
+        return res
+          .status(400)
+          .json({ message: "Invalid reference to a related resource" });
     }
   }
 
