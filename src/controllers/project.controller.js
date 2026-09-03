@@ -50,9 +50,9 @@ export async function updateProjectHandler(req, res, next) {
     }
 
     const id = Number(req.params.id);
-    const updatedProject = await updateProject(id, result.data);
+    const project = await updateProject(id, result.data);
 
-    return res.status(200).json(updatedProject);
+    return res.status(200).json(project);
   } catch (error) {
     next(error);
   }
