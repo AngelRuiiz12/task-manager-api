@@ -23,15 +23,19 @@ export async function getTaskByIdHandler(req, res) {
   return res.status(200).json(task);
 }
 
-export async function createTaskHandler(req, res) {
-  const result = createTaskSchema.safeParse(req.body);
+export async function createTaskHandler(req, res, next) {
+  try {
+    const result = createTaskSchema.safeParse(req.body);
 
-  if (!result.success) {
-    return res.status(400).json(result.error.issues);
+    if (!result.success) {
+      return res.status(400).json(result.error.issues);
+    }
+
+    const task = await createTask(result.data);
+    return res.status(201).json(task);
+  } catch (error) {
+    next(error);
   }
-
-  const task = await createTask(result.data);
-  return res.status(201).json(task);
 }
 
 export async function updateTaskHandler(req, res, next) {
@@ -43,8 +47,8 @@ export async function updateTaskHandler(req, res, next) {
     }
 
     const id = Number(req.params.id);
-
     const updatedTask = await updateTask(id, result.data);
+
     return res.status(200).json(updatedTask);
   } catch (error) {
     next(error);
