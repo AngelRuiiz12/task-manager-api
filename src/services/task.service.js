@@ -23,3 +23,21 @@ export async function updateTask(id, data) {
 export async function deleteTask(id) {
   await prisma.task.delete({ where: { id } });
 }
+
+export async function addTagToTask(taskId, tagId) {
+  const task = await prisma.task.update({
+    where: { id: taskId },
+    data: { tags: { connect: { id: tagId } } },
+    include: { tags: true },
+  });
+  return task;
+}
+
+export async function removeTagFromTask(taskId, tagId) {
+  const task = await prisma.task.update({
+    where: { id: taskId },
+    data: { tags: { disconnect: { id: tagId } } },
+    include: { tags: true },
+  });
+  return task;
+}
