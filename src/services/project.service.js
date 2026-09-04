@@ -1,25 +1,38 @@
 import prisma from "../lib/prisma.js";
 
-export async function getAllProjects() {
-  const projects = await prisma.project.findMany();
+export async function getAllProjects(userId) {
+  const projects = await prisma.project.findMany({ where: { userId } });
   return projects;
 }
 
-export async function getProjectById(id) {
-  const project = await prisma.project.findUnique({ where: { id } });
+export async function getProjectById(id, userId) {
+  const project = await prisma.project.findFirst({ where: { id, userId } });
   return project;
 }
 
-export async function createProject(data) {
-  const project = await prisma.project.create({ data });
+export async function createProject(data, userId) {
+  const project = await prisma.project.create({ data: { ...data, userId } });
   return project;
 }
 
-export async function updateProject(id, data) {
-  const project = await prisma.project.update({ where: { id }, data });
-  return project;
+export async function updateProject(id, data, userId) {
+  const project = await prisma.project.findFirst({ where: { id, userId } });
+
+  if (!project) {
+    return null;
+  }
+
+  const updatedProject = await prisma.project.update({ where: { id }, data });
+  return updatedProject;
 }
 
-export async function deleteProject(id) {
+export async function deleteProject(id, userId) {
+  const project = await prisma.project.findFirst({ where: { id, userId } });
+
+  if (!project) {
+    return null;
+  }
+
   await prisma.project.delete({ where: { id } });
+  return true;
 }

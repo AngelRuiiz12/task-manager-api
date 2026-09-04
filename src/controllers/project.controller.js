@@ -11,13 +11,15 @@ import {
 } from "../schemas/project.schema.js";
 
 export async function getProjects(req, res) {
-  const projects = await getAllProjects();
+  const userId = req.user.id;
+  const projects = await getAllProjects(userId);
   return res.status(200).json(projects);
 }
 
 export async function getProjectByIdHandler(req, res) {
   const id = Number(req.params.id);
-  const project = await getProjectById(id);
+  const userId = req.user.id;
+  const project = await getProjectById(id, userId);
 
   if (!project) {
     return res.status(404).json({ message: "Project not found" });
@@ -34,7 +36,8 @@ export async function createProjectHandler(req, res, next) {
       return res.status(400).json(result.error.issues);
     }
 
-    const project = await createProject(result.data);
+    const userId = req.user.id;
+    const project = await createProject(result.data, userId);
     return res.status(201).json(project);
   } catch (error) {
     next(error);
@@ -50,7 +53,12 @@ export async function updateProjectHandler(req, res, next) {
     }
 
     const id = Number(req.params.id);
-    const project = await updateProject(id, result.data);
+    const userId = req.user.id;
+    const project = await updateProject(id, result.data, userId);
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
 
     return res.status(200).json(project);
   } catch (error) {
@@ -61,7 +69,13 @@ export async function updateProjectHandler(req, res, next) {
 export async function deleteProjectHandler(req, res, next) {
   try {
     const id = Number(req.params.id);
-    await deleteProject(id);
+    const userId = req.user.id;
+
+    const result = await deleteProject(id, userId);
+
+    if (!result) {
+      return res.status(404).json({ message: "Project not found" });
+    }
 
     return res.status(204).send();
   } catch (error) {
