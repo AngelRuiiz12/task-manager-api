@@ -34,7 +34,7 @@ export async function login(data) {
   }
 
   const token = generateToken(user);
-  const { password, ...safeUser } = user;
+  const { password, ...safeUser } = user; // esto es para quitar la password del objeto user
 
   return { user: safeUser, token };
 }
