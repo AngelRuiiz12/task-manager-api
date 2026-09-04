@@ -21,7 +21,11 @@ describe("GET /projects", () => {
   test("devolver el proyecto que se pide correctamente", async () => {
     // Arrange
     const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
+      data: {
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+      },
     });
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },
@@ -41,11 +45,6 @@ describe("GET /projects", () => {
 
 describe("POST /projects", () => {
   test("devolver un error 400 al enviar datos inválidos", async () => {
-    // Arrange
-    const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
-    });
-
     // Act
     const response = await request(app).post("/projects").send({
       userId: 999999,
@@ -60,7 +59,11 @@ describe("POST /projects", () => {
   test("crear un proyecto correctamente", async () => {
     // Arrange
     const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
+      data: {
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+      },
     });
 
     // Act
@@ -82,7 +85,11 @@ describe("PUT /projects", () => {
   test("actualiza un proyecto correctamente", async () => {
     // Arrange
     const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
+      data: {
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+      },
     });
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },
@@ -105,7 +112,11 @@ describe("DELETE /projects", () => {
   test("elimina un proyecto correctamente", async () => {
     // Arrange
     const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
+      data: {
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+      },
     });
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },

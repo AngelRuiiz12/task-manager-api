@@ -21,7 +21,11 @@ describe("GET /users", () => {
   test("devolver el usuario que se pide correctamente", async () => {
     // Arrange
     const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
+      data: {
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+      },
     });
 
     // Act
@@ -33,35 +37,7 @@ describe("GET /users", () => {
       email: "test@example.com",
       name: "Test User",
     });
-  });
-});
-
-describe("POST /users", () => {
-  test("devolver un error 400 al enviar datos inválidos", async () => {
-    // Act
-    const response = await request(app).post("/users").send({
-      email: "emailErroneo",
-    });
-
-    // Assert
-    expect(response.status).toBe(400);
-    expect(Array.isArray(response.body)).toBe(true);
-    expect(response.body.length).toBeGreaterThan(0);
-  });
-
-  test("crear un usuario correctamente", async () => {
-    // Act
-    const response = await request(app).post("/users").send({
-      email: "test@example.com",
-      name: "Test User",
-    });
-
-    // Assert
-    expect(response.status).toBe(201);
-    expect(response.body).toMatchObject({
-      email: "test@example.com",
-      name: "Test User",
-    });
+    expect(response.body).not.toHaveProperty("password");
   });
 });
 
@@ -69,7 +45,11 @@ describe("PUT /users", () => {
   test("actualiza un usuario correctamente", async () => {
     // Arrange
     const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
+      data: {
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+      },
     });
 
     // Act
@@ -82,6 +62,7 @@ describe("PUT /users", () => {
     expect(response.body).toMatchObject({
       name: "Test User Modified",
     });
+    expect(response.body).not.toHaveProperty("password");
   });
 });
 
@@ -89,7 +70,11 @@ describe("DELETE /users", () => {
   test("elimina un usuario correctamente", async () => {
     // Arrange
     const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
+      data: {
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+      },
     });
 
     // Act 1 - borrar

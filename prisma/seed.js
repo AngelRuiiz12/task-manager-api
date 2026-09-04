@@ -1,11 +1,15 @@
 import "dotenv/config";
 import prisma from "../src/lib/prisma.js";
+import bcrypt from "bcrypt";
 
 async function main() {
+  const hashedPassword = await bcrypt.hash("password123", 10);
+
   const user = await prisma.user.create({
     data: {
       email: "demo@example.com",
       name: "Usuario Demo",
+      password: hashedPassword,
     },
   });
 

@@ -70,7 +70,11 @@ describe("POST /tags", () => {
   test("conecta una etiqueta con una tarea correctamente", async () => {
     // Arrange
     const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
+      data: {
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+      },
     });
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },
@@ -137,7 +141,11 @@ describe("DELETE /tags", () => {
   test("desconecta una etiqueta de una tarea correctamente", async () => {
     // Arrange
     const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
+      data: {
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+      },
     });
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },

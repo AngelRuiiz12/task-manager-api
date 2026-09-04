@@ -1,11 +1,10 @@
 import {
   getAllUsers,
   getUserById,
-  createUser,
   updateUser,
   deleteUser,
 } from "../services/user.service.js";
-import { createUserSchema, updateUserSchema } from "../schemas/user.schema.js";
+import { updateUserSchema } from "../schemas/user.schema.js";
 
 export async function getUsers(req, res) {
   const users = await getAllUsers();
@@ -21,21 +20,6 @@ export async function getUserByIdHandler(req, res) {
   }
 
   return res.status(200).json(user);
-}
-
-export async function createUserHandler(req, res, next) {
-  try {
-    const result = createUserSchema.safeParse(req.body);
-
-    if (!result.success) {
-      return res.status(400).json(result.error.issues);
-    }
-
-    const user = await createUser(result.data);
-    return res.status(201).json(user);
-  } catch (error) {
-    next(error);
-  }
 }
 
 export async function updateUserHandler(req, res, next) {

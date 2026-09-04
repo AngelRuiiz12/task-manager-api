@@ -19,7 +19,11 @@ describe("GET /tasks", () => {
   test("devolver la tarea que se pide correctamente", async () => {
     //Arrange
     const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
+      data: {
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+      },
     });
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },
@@ -53,7 +57,11 @@ describe("POST /tasks", () => {
   test("crea una tarea correctamente", async () => {
     // Arrange
     const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
+      data: {
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+      },
     });
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },
@@ -78,7 +86,11 @@ describe("PUT /tasks", () => {
   test("actualiza una tarea correctamente", async () => {
     // Arrange
     const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
+      data: {
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+      },
     });
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },
@@ -104,7 +116,11 @@ describe("DELETE /tasks", () => {
   test("elimina una tarea correctamente", async () => {
     // Arrange
     const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test User" },
+      data: {
+        email: "test@example.com",
+        password: "password123",
+        name: "Test User",
+      },
     });
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },
