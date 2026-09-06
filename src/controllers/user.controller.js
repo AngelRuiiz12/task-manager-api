@@ -1,19 +1,14 @@
 import {
-  getAllUsers,
   getUserById,
   updateUser,
   deleteUser,
 } from "../services/user.service.js";
 import { updateUserSchema } from "../schemas/user.schema.js";
 
-export async function getUsers(req, res) {
-  const users = await getAllUsers();
-  return res.status(200).json(users);
-}
-
 export async function getUserByIdHandler(req, res) {
   const id = Number(req.params.id);
-  const user = await getUserById(id);
+  const reqId = req.user.id;
+  const user = await getUserById(id, reqId);
 
   if (!user) {
     return res.status(404).json({ message: "User not found" });
@@ -31,7 +26,12 @@ export async function updateUserHandler(req, res, next) {
     }
 
     const id = Number(req.params.id);
-    const user = await updateUser(id, result.data);
+    const reqId = req.user.id;
+    const user = await updateUser(id, result.data, reqId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     return res.status(200).json(user);
   } catch (error) {
@@ -42,7 +42,12 @@ export async function updateUserHandler(req, res, next) {
 export async function deleteUserHandler(req, res, next) {
   try {
     const id = Number(req.params.id);
-    await deleteUser(id);
+    const reqId = req.user.id;
+    const result = await deleteUser(id, reqId);
+
+    if (!result) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     return res.status(204).send();
   } catch (error) {
