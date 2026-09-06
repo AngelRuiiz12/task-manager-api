@@ -3,6 +3,7 @@ import request from "supertest";
 import app from "../src/app.js";
 import { resetDatabase } from "./helpers/resetDb.js";
 import prisma from "../src/lib/prisma.js";
+import { registerTestUser } from "./helpers/auth.js";
 
 beforeEach(async () => {
   await resetDatabase();
@@ -11,12 +12,15 @@ beforeEach(async () => {
 describe("GET /tags", () => {
   test("responde con un error 404 al buscar una etiqueta con id que no existe (999999)", async () => {
     // Arrange
+    const { token } = await registerTestUser();
     const tag = await prisma.tag.create({
       data: { name: "Test Tag" },
     });
 
     // Act
-    const response = await request(app).get("/tags/999999");
+    const response = await request(app)
+      .get("/tags/999999")
+      .set("Authorization", `Bearer ${token}`);
 
     // Assert
     expect(response.status).toBe(404);
@@ -25,12 +29,15 @@ describe("GET /tags", () => {
 
   test("devolver la etiqueta que se pide correctamente", async () => {
     // Arrange
+    const { token } = await registerTestUser();
     const tag = await prisma.tag.create({
       data: { name: "Test Tag" },
     });
 
     // Act
-    const response = await request(app).get(`/tags/${tag.id}`);
+    const response = await request(app)
+      .get(`/tags/${tag.id}`)
+      .set("Authorization", `Bearer ${token}`);
 
     // Assert
     expect(response.status).toBe(200);
@@ -42,10 +49,16 @@ describe("GET /tags", () => {
 
 describe("POST /tags", () => {
   test("devolver un error 400 al enviar datos inválidos", async () => {
+    // Arrange
+    const { token } = await registerTestUser();
+
     // Act
-    const response = await request(app).post("/tags").send({
-      name: 123,
-    });
+    const response = await request(app)
+      .post("/tags")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: 123,
+      });
 
     // Assert
     expect(response.status).toBe(400);
@@ -54,10 +67,16 @@ describe("POST /tags", () => {
   });
 
   test("crea una etiqueta correctamente", async () => {
+    // Arrange
+    const { token } = await registerTestUser();
+
     // Act
-    const response = await request(app).post("/tags").send({
-      name: "Test Tag",
-    });
+    const response = await request(app)
+      .post("/tags")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: "Test Tag",
+      });
 
     // Assert
     expect(response.status).toBe(201);
@@ -69,13 +88,7 @@ describe("POST /tags", () => {
   // ------- CASO ESPECIAL: RELACION N:M -------
   test("conecta una etiqueta con una tarea correctamente", async () => {
     // Arrange
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password: "password123",
-        name: "Test User",
-      },
-    });
+    const { user, token } = await registerTestUser();
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },
     });
@@ -87,9 +100,12 @@ describe("POST /tags", () => {
     });
 
     // Act
-    const response = await request(app).post(`/tasks/${task.id}/tags`).send({
-      tagId: tag.id,
-    });
+    const response = await request(app)
+      .post(`/tasks/${task.id}/tags`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        tagId: tag.id,
+      });
 
     // Assert
     expect(response.status).toBe(200);
@@ -100,14 +116,18 @@ describe("POST /tags", () => {
 describe("PUT /tags", () => {
   test("actualiza una etiqueta correctamente", async () => {
     // Arrange
+    const { token } = await registerTestUser();
     const tag = await prisma.tag.create({
       data: { name: "Test Tag" },
     });
 
     // Act
-    const response = await request(app).put(`/tags/${tag.id}`).send({
-      name: "Test Tag updated",
-    });
+    const response = await request(app)
+      .put(`/tags/${tag.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: "Test Tag updated",
+      });
 
     // Assert
     expect(response.status).toBe(200);
@@ -120,18 +140,23 @@ describe("PUT /tags", () => {
 describe("DELETE /tags", () => {
   test("elimina una etiqueta correctamente", async () => {
     // Arrange
+    const { token } = await registerTestUser();
     const tag = await prisma.tag.create({
       data: { name: "Test Tag" },
     });
 
     // Act 1 - borrar
-    const deleteResponse = await request(app).delete(`/tags/${tag.id}`);
+    const deleteResponse = await request(app)
+      .delete(`/tags/${tag.id}`)
+      .set("Authorization", `Bearer ${token}`);
 
     // Assert 1
     expect(deleteResponse.status).toBe(204);
 
     // Act 2 - confirmar que ya no existe la tarea
-    const getResponse = await request(app).get(`/tags/${tag.id}`);
+    const getResponse = await request(app)
+      .get(`/tags/${tag.id}`)
+      .set("Authorization", `Bearer ${token}`);
 
     // Assert
     expect(getResponse.status).toBe(404);
@@ -140,13 +165,7 @@ describe("DELETE /tags", () => {
   // ------- CASO ESPECIAL: RELACION N:M -------
   test("desconecta una etiqueta de una tarea correctamente", async () => {
     // Arrange
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password: "password123",
-        name: "Test User",
-      },
-    });
+    const { user, token } = await registerTestUser();
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },
     });
@@ -156,14 +175,17 @@ describe("DELETE /tags", () => {
     const tag = await prisma.tag.create({
       data: { name: "Test Tag" },
     });
-    await request(app).post(`/tasks/${task.id}/tags`).send({
-      tagId: tag.id,
-    });
+    await request(app)
+      .post(`/tasks/${task.id}/tags`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        tagId: tag.id,
+      });
 
     // Act
-    const response = await request(app).delete(
-      `/tasks/${task.id}/tags/${tag.id}`,
-    );
+    const response = await request(app)
+      .delete(`/tasks/${task.id}/tags/${tag.id}`)
+      .set("Authorization", `Bearer ${token}`);
 
     // Assert
     expect(response.status).toBe(200);

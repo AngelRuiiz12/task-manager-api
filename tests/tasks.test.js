@@ -3,6 +3,7 @@ import request from "supertest";
 import app from "../src/app.js";
 import { resetDatabase } from "./helpers/resetDb.js";
 import prisma from "../src/lib/prisma.js";
+import { registerTestUser } from "./helpers/auth.js";
 
 beforeEach(async () => {
   await resetDatabase();
@@ -10,7 +11,11 @@ beforeEach(async () => {
 
 describe("GET /tasks", () => {
   test("responde con un error 404 al buscar una tarea con id que no existe (999999)", async () => {
-    const response = await request(app).get("/tasks/999999");
+    const { token } = await registerTestUser();
+
+    const response = await request(app)
+      .get("/tasks/999999")
+      .set("Authorization", `Bearer ${token}`);
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({ message: "Task not found" });
@@ -18,13 +23,7 @@ describe("GET /tasks", () => {
 
   test("devolver la tarea que se pide correctamente", async () => {
     //Arrange
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password: "password123",
-        name: "Test User",
-      },
-    });
+    const { user, token } = await registerTestUser();
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },
     });
@@ -33,7 +32,9 @@ describe("GET /tasks", () => {
     });
 
     // Act
-    const response = await request(app).get(`/tasks/${task.id}`);
+    const response = await request(app)
+      .get(`/tasks/${task.id}`)
+      .set("Authorization", `Bearer ${token}`);
 
     // Assert
     expect(response.status).toBe(200);
@@ -47,8 +48,16 @@ describe("GET /tasks", () => {
 
 describe("POST /tasks", () => {
   test("devolver un error 400 al enviar datos inválidos", async () => {
-    const response = await request(app).post("/tasks").send({ projectId: 1 });
+    // Arrange
+    const { token } = await registerTestUser();
 
+    // Act
+    const response = await request(app)
+      .post("/tasks")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ projectId: 1 });
+
+    // Assert
     expect(response.status).toBe(400);
     expect(Array.isArray(response.body)).toBe(true);
     expect(response.body.length).toBeGreaterThan(0);
@@ -56,13 +65,7 @@ describe("POST /tasks", () => {
 
   test("crea una tarea correctamente", async () => {
     // Arrange
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password: "password123",
-        name: "Test User",
-      },
-    });
+    const { user, token } = await registerTestUser();
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },
     });
@@ -70,6 +73,7 @@ describe("POST /tasks", () => {
     // Act
     const response = await request(app)
       .post("/tasks")
+      .set("Authorization", `Bearer ${token}`)
       .send({ title: "Tarea de test", projectId: project.id });
 
     // Assert
@@ -85,13 +89,7 @@ describe("POST /tasks", () => {
 describe("PUT /tasks", () => {
   test("actualiza una tarea correctamente", async () => {
     // Arrange
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password: "password123",
-        name: "Test User",
-      },
-    });
+    const { user, token } = await registerTestUser();
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },
     });
@@ -100,9 +98,12 @@ describe("PUT /tasks", () => {
     });
 
     // Act
-    const response = await request(app).put(`/tasks/${task.id}`).send({
-      status: "DONE",
-    });
+    const response = await request(app)
+      .put(`/tasks/${task.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        status: "DONE",
+      });
 
     // Assert
     expect(response.status).toBe(200);
@@ -115,13 +116,7 @@ describe("PUT /tasks", () => {
 describe("DELETE /tasks", () => {
   test("elimina una tarea correctamente", async () => {
     // Arrange
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password: "password123",
-        name: "Test User",
-      },
-    });
+    const { user, token } = await registerTestUser();
     const project = await prisma.project.create({
       data: { name: "Proyecto de test", userId: user.id },
     });
@@ -130,13 +125,17 @@ describe("DELETE /tasks", () => {
     });
 
     // Act 1: borrar
-    const deleteResponse = await request(app).delete(`/tasks/${task.id}`);
+    const deleteResponse = await request(app)
+      .delete(`/tasks/${task.id}`)
+      .set("Authorization", `Bearer ${token}`);
 
     // Assert 1
     expect(deleteResponse.status).toBe(204);
 
     // Act 2: confirmar que ya no existe la tarea
-    const getResponse = await request(app).get(`/tasks/${task.id}`);
+    const getResponse = await request(app)
+      .get(`/tasks/${task.id}`)
+      .set("Authorization", `Bearer ${token}`);
 
     // Assert 2
     expect(getResponse.status).toBe(404);

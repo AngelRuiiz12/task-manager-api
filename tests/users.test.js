@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach } from "vitest";
 import request from "supertest";
 import app from "../src/app.js";
 import { resetDatabase } from "./helpers/resetDb.js";
-import prisma from "../src/lib/prisma.js";
+import { registerTestUser } from "./helpers/auth.js";
 
 beforeEach(async () => {
   await resetDatabase();
@@ -10,8 +10,13 @@ beforeEach(async () => {
 
 describe("GET /users", () => {
   test("responde con un error 404 al buscar un usuario con id que no existe (999999)", async () => {
+    // Arrange
+    const { token } = await registerTestUser();
+
     // Act
-    const response = await request(app).get("/users/999999");
+    const response = await request(app)
+      .get("/users/999999")
+      .set("Authorization", `Bearer ${token}`);
 
     // Assert
     expect(response.status).toBe(404);
@@ -20,16 +25,12 @@ describe("GET /users", () => {
 
   test("devolver el usuario que se pide correctamente", async () => {
     // Arrange
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password: "password123",
-        name: "Test User",
-      },
-    });
+    const { user, token } = await registerTestUser();
 
     // Act
-    const response = await request(app).get(`/users/${user.id}`);
+    const response = await request(app)
+      .get(`/users/${user.id}`)
+      .set("Authorization", `Bearer ${token}`);
 
     // Assert
     expect(response.status).toBe(200);
@@ -44,18 +45,15 @@ describe("GET /users", () => {
 describe("PUT /users", () => {
   test("actualiza un usuario correctamente", async () => {
     // Arrange
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password: "password123",
-        name: "Test User",
-      },
-    });
+    const { user, token } = await registerTestUser();
 
     // Act
-    const response = await request(app).put(`/users/${user.id}`).send({
-      name: "Test User Modified",
-    });
+    const response = await request(app)
+      .put(`/users/${user.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: "Test User Modified",
+      });
 
     // Assert
     expect(response.status).toBe(200);
@@ -69,22 +67,20 @@ describe("PUT /users", () => {
 describe("DELETE /users", () => {
   test("elimina un usuario correctamente", async () => {
     // Arrange
-    const user = await prisma.user.create({
-      data: {
-        email: "test@example.com",
-        password: "password123",
-        name: "Test User",
-      },
-    });
+    const { user, token } = await registerTestUser();
 
     // Act 1 - borrar
-    const deleteResponse = await request(app).delete(`/users/${user.id}`);
+    const deleteResponse = await request(app)
+      .delete(`/users/${user.id}`)
+      .set("Authorization", `Bearer ${token}`);
 
     // Assert 1
     expect(deleteResponse.status).toBe(204);
 
     // Act 2 - confirmar que ya no existe el usuario
-    const getResponse = await request(app).get(`/users/${user.id}`);
+    const getResponse = await request(app)
+      .get(`/users/${user.id}`)
+      .set("Authorization", `Bearer ${token}`);
 
     // Assert 2
     expect(getResponse.status).toBe(404);
