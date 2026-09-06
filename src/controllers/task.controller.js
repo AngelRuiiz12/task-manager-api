@@ -7,12 +7,27 @@ import {
   addTagToTask,
   removeTagFromTask,
 } from "../services/task.service.js";
-import { createTaskSchema, updateTaskSchema } from "../schemas/task.schema.js";
+import {
+  createTaskSchema,
+  updateTaskSchema,
+  taskQuerySchema,
+} from "../schemas/task.schema.js";
 
-export async function getTasks(req, res) {
-  const userId = req.user.id;
-  const tasks = await getAllTasks(userId);
-  return res.status(200).json(tasks);
+export async function getTasks(req, res, next) {
+  try {
+    const result = taskQuerySchema.safeParse(req.query);
+
+    if (!result.success) {
+      return res.status(400).json(result.error.issues);
+    }
+
+    const userId = req.user.id;
+    const tasks = await getAllTasks(userId, result.data);
+
+    return res.status(200).json(tasks);
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function getTaskByIdHandler(req, res) {

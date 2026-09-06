@@ -1,9 +1,28 @@
 import prisma from "../lib/prisma.js";
 import { getProjectById } from "./project.service.js";
 
-export async function getAllTasks(userId) {
-  const tasks = await prisma.task.findMany({ where: { project: { userId } } });
-  return tasks;
+export async function getAllTasks(userId, filters) {
+  const { page, limit, status, sortBy, order } = filters;
+
+  const [tasks, total] = await Promise.all([
+    prisma.task.findMany({
+      where: { project: { userId }, status },
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { [sortBy]: order },
+    }),
+    prisma.task.count({ where: { project: { userId } } }),
+  ]);
+
+  return {
+    data: tasks,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 }
 
 export async function getTaskById(id, userId) {
