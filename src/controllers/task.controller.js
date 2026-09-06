@@ -10,13 +10,15 @@ import {
 import { createTaskSchema, updateTaskSchema } from "../schemas/task.schema.js";
 
 export async function getTasks(req, res) {
-  const tasks = await getAllTasks();
+  const userId = req.user.id;
+  const tasks = await getAllTasks(userId);
   return res.status(200).json(tasks);
 }
 
 export async function getTaskByIdHandler(req, res) {
   const id = Number(req.params.id);
-  const task = await getTaskById(id);
+  const userId = req.user.id;
+  const task = await getTaskById(id, userId);
 
   if (!task) {
     return res.status(404).json({ message: "Task not found" });
@@ -33,7 +35,13 @@ export async function createTaskHandler(req, res, next) {
       return res.status(400).json(result.error.issues);
     }
 
-    const task = await createTask(result.data);
+    const userId = req.user.id;
+    const task = await createTask(result.data, userId);
+
+    if (!task) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
     return res.status(201).json(task);
   } catch (error) {
     next(error);
@@ -49,7 +57,12 @@ export async function updateTaskHandler(req, res, next) {
     }
 
     const id = Number(req.params.id);
-    const updatedTask = await updateTask(id, result.data);
+    const userId = req.user.id;
+    const updatedTask = await updateTask(id, result.data, userId);
+
+    if (!updatedTask) {
+      return res.status(404).json({ message: "Task not found" });
+    }
 
     return res.status(200).json(updatedTask);
   } catch (error) {
@@ -60,8 +73,13 @@ export async function updateTaskHandler(req, res, next) {
 export async function deleteTaskHandler(req, res, next) {
   try {
     const id = Number(req.params.id);
+    const userId = req.user.id;
+    const result = await deleteTask(id, userId);
 
-    await deleteTask(id);
+    if (!result) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
     return res.status(204).send();
   } catch (error) {
     next(error);
@@ -72,8 +90,14 @@ export async function addTagToTaskHandler(req, res, next) {
   try {
     const taskId = Number(req.params.id);
     const tagId = Number(req.body.tagId);
+    const userId = req.user.id;
 
-    const task = await addTagToTask(taskId, tagId);
+    const task = await addTagToTask(taskId, tagId, userId);
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
     return res.status(200).json(task);
   } catch (error) {
     next(error);
@@ -84,8 +108,14 @@ export async function removeTagFromTaskHandler(req, res, next) {
   try {
     const taskId = Number(req.params.id);
     const tagId = Number(req.params.tagId);
+    const userId = req.user.id;
 
-    const task = await removeTagFromTask(taskId, tagId);
+    const task = await removeTagFromTask(taskId, tagId, userId);
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
     return res.status(200).json(task);
   } catch (error) {
     next(error);
