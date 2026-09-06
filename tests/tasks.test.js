@@ -44,6 +44,30 @@ describe("GET /tasks", () => {
       projectId: project.id,
     });
   });
+
+  test("no se permite acceder a la tarea de otro usuario", async () => {
+    // Arrange
+    const { user: userA } = await registerTestUser({
+      email: "usuarioA@example.com",
+    });
+    const { token: tokenB } = await registerTestUser({
+      email: "usuarioB@example.com",
+    });
+    const project = await prisma.project.create({
+      data: { name: "Proyecto de test", userId: userA.id },
+    });
+    const task = await prisma.task.create({
+      data: { title: "Tarea de test", projectId: project.id },
+    });
+
+    // Act
+    const response = await request(app)
+      .get(`/tasks/${task.id}`)
+      .set("Authorization", `Bearer ${tokenB}`);
+
+    // Assert
+    expect(response.status).toBe(404);
+  });
 });
 
 describe("POST /tasks", () => {
@@ -83,6 +107,31 @@ describe("POST /tasks", () => {
       status: "PENDING",
       projectId: project.id,
     });
+  });
+
+  test("no se permite crear una tarea en el proyecto de otro usuario", async () => {
+    const { user: userA } = await registerTestUser({
+      email: "usuarioA@example.com",
+    });
+    const { token: tokenB } = await registerTestUser({
+      email: "usuarioB@example.com",
+    });
+    const projectA = await prisma.project.create({
+      data: { name: "Proyecto de test", userId: userA.id },
+    });
+
+    // Act
+    const response = await request(app)
+      .post(`/tasks`)
+      .set("Authorization", `Bearer ${tokenB}`)
+      .send({
+        title: "Tarea de test en proyecto ajeno",
+        projectId: projectA.id,
+      });
+
+    // Assert
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ message: "Project not found" });
   });
 });
 

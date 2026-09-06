@@ -43,6 +43,28 @@ describe("GET /projects", () => {
       userId: user.id,
     });
   });
+
+  test("no se permite acceder al proyecto de otro usuario", async () => {
+    // Arrange
+    const { user: userA } = await registerTestUser({
+      email: "usuarioA@example.com",
+    });
+    const { token: tokenB } = await registerTestUser({
+      email: "usuarioB@example.com",
+    });
+    const project = await prisma.project.create({
+      data: { name: "Proyecto de test", userId: userA.id },
+    });
+
+    // Act
+    const response = await request(app)
+      .get(`/projects/${project.id}`)
+      .set("Authorization", `Bearer ${tokenB}`);
+
+    // Assert
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ message: "Project not found" });
+  });
 });
 
 describe("POST /projects", () => {

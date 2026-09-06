@@ -40,6 +40,25 @@ describe("GET /users", () => {
     });
     expect(response.body).not.toHaveProperty("password");
   });
+
+  test("no se permite acceder al perfil de otro usuario", async () => {
+    // Arrange
+    const { user: userA, token: tokenA } = await registerTestUser({
+      email: "usuarioA@example.com",
+    });
+    const { user: userB, token: tokenB } = await registerTestUser({
+      email: "usuarioB@example.com",
+    });
+
+    // Act
+    const response = await request(app)
+      .get(`/users/${userA.id}`)
+      .set("Authorization", `Bearer ${tokenB}`);
+
+    // Assert
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ message: "User not found" });
+  });
 });
 
 describe("PUT /users", () => {
