@@ -7,6 +7,8 @@ import authRoutes from "./routes/auth.routes.js";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import morgan from "morgan";
+import swaggerUI from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger.js";
 import { authenticate } from "./middlewares/authenticate.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 
@@ -44,6 +46,7 @@ app.use("/users", authenticate, userRoutes);
 app.use("/tags", authenticate, tagRoutes);
 app.use("/auth", authLimiter, authRoutes);
 
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 app.use(errorHandler);
 
 export default app;
