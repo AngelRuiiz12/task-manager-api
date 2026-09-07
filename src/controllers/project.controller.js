@@ -8,12 +8,24 @@ import {
 import {
   createProjectSchema,
   updateProjectSchema,
+  projectQuerySchema,
 } from "../schemas/project.schema.js";
 
-export async function getProjects(req, res) {
-  const userId = req.user.id;
-  const projects = await getAllProjects(userId);
-  return res.status(200).json(projects);
+export async function getProjects(req, res, next) {
+  try {
+    const result = projectQuerySchema.safeParse(req.query);
+
+    if (!result.success) {
+      return res.status(400).json(result.error.issues);
+    }
+
+    const userId = req.user.id;
+    const projects = await getAllProjects(userId, result.data);
+
+    return res.status(200).json(projects);
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function getProjectByIdHandler(req, res) {

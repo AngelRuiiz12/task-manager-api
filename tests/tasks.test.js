@@ -206,7 +206,7 @@ describe("GET /tasks", () => {
     expect(titles).toEqual(["Café", "Manzana", "Zapato"]);
   });
 
-  test("xxxxx", async () => {
+  test("responde con un error 400 si page no es un número válido", async () => {
     // Arrange
     const { token } = await registerTestUser();
 

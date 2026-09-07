@@ -1,8 +1,29 @@
 import prisma from "../lib/prisma.js";
 
-export async function getAllProjects(userId) {
-  const projects = await prisma.project.findMany({ where: { userId } });
-  return projects;
+export async function getAllProjects(userId, filters) {
+  const { page, limit, sortBy, order } = filters;
+
+  const where = { userId };
+
+  const [projects, total] = await Promise.all([
+    prisma.project.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { [sortBy]: order },
+    }),
+    prisma.project.count({ where }),
+  ]);
+
+  return {
+    data: projects,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 }
 
 export async function getProjectById(id, userId) {
