@@ -68,6 +68,156 @@ describe("GET /tasks", () => {
     // Assert
     expect(response.status).toBe(404);
   });
+
+  test("paginación no rompe el filtrado por propiedad que ya tenemos y solo devuelve tareas tuyas", async () => {
+    // Arrange
+    const { user: userA, token: tokenA } = await registerTestUser({
+      email: "usuarioA@example.com",
+    });
+    const projectA = await prisma.project.create({
+      data: { name: "Proyecto de test A", userId: userA.id },
+    });
+    const task1 = await prisma.task.create({
+      data: { title: "Tarea de test", projectId: projectA.id },
+    });
+    const task2 = await prisma.task.create({
+      data: { title: "Tarea de test", projectId: projectA.id },
+    });
+
+    const { user: userB } = await registerTestUser({
+      email: "usuarioB@example.com",
+    });
+    const projectB = await prisma.project.create({
+      data: { name: "Proyecto de test B", userId: userB.id },
+    });
+    const task3 = await prisma.task.create({
+      data: { title: "Task de test", projectId: projectB.id },
+    });
+
+    // Act
+    const response = await request(app)
+      .get("/tasks")
+      .set("Authorization", `Bearer ${tokenA}`);
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body.data)).toBe(true);
+    expect(response.body.data.length).toBe(2);
+    expect(response.body.meta.total).toBe(2);
+  });
+
+  test("paginación correcta en los resultados con page y limit", async () => {
+    // Arrange
+    const { user, token } = await registerTestUser();
+    const projectA = await prisma.project.create({
+      data: { name: "Proyecto de test A", userId: user.id },
+    });
+    const task1 = await prisma.task.create({
+      data: { title: "Tarea de test", projectId: projectA.id },
+    });
+    const task2 = await prisma.task.create({
+      data: { title: "Tarea de test", projectId: projectA.id },
+    });
+    const task3 = await prisma.task.create({
+      data: { title: "Tarea de test", projectId: projectA.id },
+    });
+
+    // Act 1
+    const response1 = await request(app)
+      .get("/tasks?page=1&limit=2")
+      .set("Authorization", `Bearer ${token}`);
+
+    // Assert 1
+    expect(response1.status).toBe(200);
+    expect(Array.isArray(response1.body.data)).toBe(true);
+    expect(response1.body.data.length).toBe(2);
+    expect(response1.body.meta.total).toBe(3);
+    expect(response1.body.meta.totalPages).toBe(2);
+
+    // Act 2
+    const response2 = await request(app)
+      .get("/tasks?page=2&limit=2")
+      .set("Authorization", `Bearer ${token}`);
+
+    // Assert
+    expect(response2.status).toBe(200);
+    expect(Array.isArray(response2.body.data)).toBe(true);
+    expect(response2.body.data.length).toBe(1);
+  });
+
+  test("filtra correctamente por status", async () => {
+    // Arrange
+    const { user, token } = await registerTestUser();
+    const project = await prisma.project.create({
+      data: { name: "Proyecto de test", userId: user.id },
+    });
+    const task1 = await prisma.task.create({
+      data: { title: "Tarea de test PENDING", projectId: project.id },
+    });
+    const task2 = await prisma.task.create({
+      data: { title: "Tarea de test PENDING", projectId: project.id },
+    });
+    const task3 = await prisma.task.create({
+      data: {
+        title: "Tarea de test DONE",
+        status: "DONE",
+        projectId: project.id,
+      },
+    });
+
+    // Act
+    const response = await request(app)
+      .get("/tasks?status=DONE")
+      .set("Authorization", `Bearer ${token}`);
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body.data)).toBe(true);
+    expect(response.body.data.length).toBe(1);
+    expect(response.body.data[0].status).toBe("DONE");
+    expect(response.body.meta.total).toBe(1);
+  });
+
+  test("ordena correctamente por título de forma ascendente", async () => {
+    // Arrange
+    const { user, token } = await registerTestUser();
+    const project = await prisma.project.create({
+      data: { name: "Proyecto de test", userId: user.id },
+    });
+    const task1 = await prisma.task.create({
+      data: { title: "Zapato", projectId: project.id },
+    });
+    const task2 = await prisma.task.create({
+      data: { title: "Manzana", projectId: project.id },
+    });
+    const task3 = await prisma.task.create({
+      data: { title: "Café", projectId: project.id },
+    });
+
+    // Act
+    const response = await request(app)
+      .get("/tasks?sortBy=title&order=asc")
+      .set("Authorization", `Bearer ${token}`);
+
+    // Assert
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body.data)).toBe(true);
+    const titles = response.body.data.map((task) => task.title);
+    expect(titles).toEqual(["Café", "Manzana", "Zapato"]);
+  });
+
+  test("xxxxx", async () => {
+    // Arrange
+    const { token } = await registerTestUser();
+
+    // Act
+    const response = await request(app)
+      .get("/tasks?page=abc")
+      .set("Authorization", `Bearer ${token}`);
+
+    // Assert
+    expect(response.status).toBe(400);
+  });
 });
 
 describe("POST /tasks", () => {

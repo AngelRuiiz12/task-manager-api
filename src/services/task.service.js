@@ -4,14 +4,16 @@ import { getProjectById } from "./project.service.js";
 export async function getAllTasks(userId, filters) {
   const { page, limit, status, sortBy, order } = filters;
 
+  const where = { project: { userId }, status };
+
   const [tasks, total] = await Promise.all([
     prisma.task.findMany({
-      where: { project: { userId }, status },
+      where,
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { [sortBy]: order },
     }),
-    prisma.task.count({ where: { project: { userId } } }),
+    prisma.task.count({ where }),
   ]);
 
   return {
