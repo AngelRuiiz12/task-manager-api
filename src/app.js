@@ -6,6 +6,7 @@ import tagRoutes from "./routes/tag.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import morgan from "morgan";
 import { authenticate } from "./middlewares/authenticate.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 
@@ -25,6 +26,11 @@ const authLimiter = rateLimit({
 
 const app = express();
 app.use(helmet());
+
+if (process.env.NODE_ENV !== "test") {
+  app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+}
+
 app.use(generalLimiter);
 app.use(express.json());
 
