@@ -8,6 +8,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import morgan from "morgan";
 import swaggerUI from "swagger-ui-express";
+import cors from "cors";
 import { swaggerSpec } from "./config/swagger.js";
 import { authenticate } from "./middlewares/authenticate.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
@@ -27,6 +28,7 @@ const authLimiter = rateLimit({
 });
 
 const app = express();
+app.use(cors());
 app.use(helmet());
 
 if (process.env.NODE_ENV !== "test") {
